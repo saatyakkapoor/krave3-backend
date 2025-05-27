@@ -116,14 +116,26 @@ const sendMessage = async () => {
   newMessage.value = '';
   isTyping.value = true;
 
-  try {
-    const response = await fetch('https://krave3-backend.vercel.app/api/ask', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message: userMessage }),
-    });
+try {
+  const response = await fetch('https://krave3-backend.vercel.app/api/krave-gemini-api', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt: userMessage }), // correct key
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Something went wrong');
+  }
+
+  console.log(data.response); // Gemini output
+} catch (error) {
+  console.error('Error:', error);
+}
+
 
     if (!response.ok) {
       throw new Error(`Server responded with ${response.status}`);
