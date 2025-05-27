@@ -117,7 +117,7 @@ const sendMessage = async () => {
   isTyping.value = true;
 
   try {
-    const response = await fetch('https://krave3-backend.vercel.app/api/krave-gemini-api', {
+    const response = await fetch('https://krave3-backend.vercel.app/server/api/krave-gemini-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
