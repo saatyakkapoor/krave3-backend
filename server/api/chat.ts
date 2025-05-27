@@ -3,7 +3,7 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 
-const mode = 'testing'; // switch to 'production' when deploying on Vercel
+const mode = 'production'; // switch to 'production' when deploying on Vercel
 
 async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (req.method !== 'POST') {
