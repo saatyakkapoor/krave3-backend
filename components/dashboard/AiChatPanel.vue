@@ -116,46 +116,35 @@ const sendMessage = async () => {
   newMessage.value = '';
   isTyping.value = true;
 
-try {
-  const response = await fetch('https://krave3-backend.vercel.app/api/krave-gemini-api', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prompt: userMessage }), // correct key
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || 'Something went wrong');
-  }
-
-  console.log(data.response); // Gemini output
-} catch (error) {
-  console.error('Error:', error);
-}
-
+  try {
+    const response = await fetch('https://krave3-backend.vercel.app/api/krave-gemini-api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt: userMessage }), // correct key
+    });
 
     if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server responded with status ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.reply || "Sorry, I didn't understand that.";
+    const aiResponse = data.response || "Sorry, I didn't understand that.";
 
     messages.value.push({ text: aiResponse, isUser: false, timestamp: new Date() });
   } catch (error: any) {
-    messages.value.push({ text: `Error: ${error.message}`, isUser: false, timestamp: new Date() });
+    messages.value.push({ text: `Error: ${error.message || error}`, isUser: false, timestamp: new Date() });
+  } finally {
+    isTyping.value = false;
   }
-
-  isTyping.value = false;
 };
 </script>
 
 <style scoped>
 /* Ensures the chat messages scroll area behaves correctly */
 .overflow-y-auto {
-  /* Custom styles if needed */
+  /* You can add custom scroll styles here if needed */
 }
 </style>
