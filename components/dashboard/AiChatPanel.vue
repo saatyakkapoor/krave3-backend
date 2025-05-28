@@ -5,7 +5,7 @@
     @click.self="!isOpen ? toggleChat() : null"
   >
     <div class="container mx-auto h-full flex flex-col">
-      <!-- Header for the Chat Panel (visible when collapsed and expanded) -->
+      <!-- Header -->
       <div
         class="flex items-center justify-between p-3 border-b border-base-300"
         :class="{ 'cursor-pointer': !isOpen }"
@@ -27,9 +27,8 @@
         </button>
       </div>
 
-      <!-- Chat Content Area (visible only when expanded) -->
+      <!-- Chat Area -->
       <div v-if="isOpen" class="flex-grow p-4 overflow-y-auto flex flex-col space-y-3">
-        <!-- Messages -->
         <div
           v-for="(message, index) in messages"
           :key="index"
@@ -50,7 +49,7 @@
         </div>
       </div>
 
-      <!-- Input Area (visible only when expanded) -->
+      <!-- Input -->
       <div v-if="isOpen" class="p-3 border-t border-base-300">
         <form @submit.prevent="sendMessage" class="flex items-center gap-2">
           <input
@@ -116,35 +115,49 @@ const sendMessage = async () => {
   newMessage.value = '';
   isTyping.value = true;
 
-  try {
-    const response = await fetch('https://krave3-backend.vercel.app/api/krave-gemini-api', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt: userMessage }), // correct key
-    });
+  const maxRetries = 2;
+  let attempts = 0;
+  let success = false;
+  let errorMessage = '';
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Server responded with status ${response.status}`);
+  while (attempts <= maxRetries && !success) {
+    try {
+      const response = await fetch('https://krave-6r7n.vercel.app/api/krave-gemini-api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: userMessage }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server responded with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.response || "Sorry, I didn't understand that.";
+      messages.value.push({ text: aiResponse, isUser: false, timestamp: new Date() });
+      success = true;
+    } catch (error: any) {
+      attempts++;
+      errorMessage = error.message || 'Unknown error';
+      if (attempts > maxRetries) {
+        messages.value.push({
+          text: `Error: ${errorMessage} (after ${attempts} attempts)`,
+          isUser: false,
+          timestamp: new Date(),
+        });
+      }
     }
-
-    const data = await response.json();
-    const aiResponse = data.response || "Sorry, I didn't understand that.";
-
-    messages.value.push({ text: aiResponse, isUser: false, timestamp: new Date() });
-  } catch (error: any) {
-    messages.value.push({ text: `Error: ${error.message || error}`, isUser: false, timestamp: new Date() });
-  } finally {
-    isTyping.value = false;
   }
+
+  isTyping.value = false;
 };
 </script>
 
 <style scoped>
-/* Ensures the chat messages scroll area behaves correctly */
 .overflow-y-auto {
-  /* You can add custom scroll styles here if needed */
+  /* Custom scroll behavior if needed */
 }
 </style>
